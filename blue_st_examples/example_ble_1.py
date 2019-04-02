@@ -45,6 +45,7 @@ from __future__ import print_function
 import sys
 import os
 import time
+from time import gmtime, strftime
 from abc import abstractmethod
 from bluepy.btle import BTLEException
 
@@ -140,6 +141,11 @@ class MyNodeListener(NodeListener):
 # feature has updated its data.
 #
 class MyFeatureListener(FeatureListener):
+    def __init__(self, deviceName, logfile):
+        self.name = deviceName
+        self.f = open(logfile, 'w')
+        self.f.write(("\n\n* * * * * * * * * STARTING RUN %s * * * *\n") % strftime('%a, %d %b %Y %H:%M:%S +0000', gmtime())) 
+        print('created logfile (%s) for: %s' % (logfile, self.name))
 
     num = 0
     #
@@ -149,9 +155,7 @@ class MyFeatureListener(FeatureListener):
     # @param sample  Data extracted from the feature.
     #
     def on_update(self, feature, sample):
-        if(self.num < NOTIFICATIONS):
-            print(feature)
-            self.num += 1
+        self.f.write(('%s: %s\n') % (self.name, feature))
 
 
 # MAIN APPLICATION
@@ -199,12 +203,37 @@ def main(argv):
                 print('Exiting...\n')
                 sys.exit(0)
             device = discovered_devices[choice - 1]
+            device2 = discovered_devices[choice]
+            device3 = discovered_devices[choice + 1]
+            device4 = discovered_devices[choice + 2]
+            device5 = discovered_devices[choice + 3]
+            device6 = discovered_devices[choice + 4]
             
             # Connecting to the device.
             node_listener = MyNodeListener()
+            node_listener2 = MyNodeListener()
+            node_listener3 = MyNodeListener()
+            node_listener4 = MyNodeListener()
+            node_listener5 = MyNodeListener()
+            node_listener6 = MyNodeListener()
             device.add_listener(node_listener)
+            device2.add_listener(node_listener2)
+            device3.add_listener(node_listener3)
+            device4.add_listener(node_listener4)
+            device5.add_listener(node_listener5)
+            device6.add_listener(node_listener6)
             print('\nConnecting to %s...' % (device.get_name()))
+            print('\nConnecting to %s...' % (device2.get_name()))
+            print('\nConnecting to %s...' % (device3.get_name()))
+            print('\nConnecting to %s...' % (device4.get_name()))
+            print('\nConnecting to %s...' % (device5.get_name()))
+            print('\nConnecting to %s...' % (device6.get_name()))
             device.connect()
+            device2.connect()
+            device3.connect()
+            device4.connect()
+            device5.connect()
+            device6.connect()
             print('Connection done.')
 
             while True:
@@ -212,6 +241,11 @@ def main(argv):
                 print('\nFeatures:')
                 i = 1
                 features = device.get_features()
+                features2 = device2.get_features()
+                features3 = device3.get_features()
+                features4 = device4.get_features()
+                features5 = device5.get_features()
+                features6 = device6.get_features()
                 
                 audioFeature = None
                 audioSyncFeature = None
@@ -228,7 +262,7 @@ def main(argv):
                         audioSyncFeature = feature
                 # Selecting a feature.
                 while True:
-                    choice = int(input('\nSelect a feature '
+                    choice = int(input('\nSelect a feature (device1)'
                                        '(\'0\' to disconnect): '))
                     if choice >= 0 and choice <= len(features):
                         break
@@ -238,17 +272,41 @@ def main(argv):
                     device.disconnect()
                     print('Disconnection done.')
                     device.remove_listener(node_listener)
-                    # Reset discovery.
-                    manager.reset_discovery()
                     # Going back to the list of devices.
                     break
                 feature = features[choice - 1]
+                feature2 = features2[choice - 1]
+                feature3 = features3[choice - 1]
+                feature4 = features4[choice - 1]
+                feature5 = features5[choice - 1]
+                feature6 = features6[choice - 1]
                 
                 # Enabling notifications.
-                feature_listener = MyFeatureListener()
+                feature_listener = MyFeatureListener(device.get_tag(), 'log1.txt')
                 feature.add_listener(feature_listener)
                 device.enable_notifications(feature)
+
+                feature_listener2 = MyFeatureListener(device2.get_tag(), 'log2.txt')
+                feature2.add_listener(feature_listener2)
+                device2.enable_notifications(feature2)
+
+                feature_listener3 = MyFeatureListener(device3.get_tag(), 'log3.txt')
+                feature3.add_listener(feature_listener3)
+                device3.enable_notifications(feature3)
+
                 
+                feature_listener4 = MyFeatureListener(device4.get_tag(), 'log4.txt')
+                feature4.add_listener(feature_listener4)
+                device4.enable_notifications(feature4)
+
+                feature_listener5 = MyFeatureListener(device5.get_tag(), 'log5.txt')
+                feature5.add_listener(feature_listener5)
+                device5.enable_notifications(feature5)
+
+                feature_listener6 = MyFeatureListener(device6.get_tag(), 'log6.txt')
+                feature6.add_listener(feature_listener6)
+                device6.enable_notifications(feature6)
+
                 if feature.get_name() == FeatureAudioADPCM.FEATURE_NAME:
                     audioSyncFeature_listener = MyFeatureListener()
                     audioSyncFeature.add_listener(audioSyncFeature_listener)
@@ -259,21 +317,13 @@ def main(argv):
                     device.enable_notifications(audioFeature)
                 
                 # Getting notifications.
-                n = 0
-                while n < NOTIFICATIONS:
-                    if device.wait_for_notifications(0.05):
-                        n += 1
-
-                # Disabling notifications.
-                device.disable_notifications(feature)
-                feature.remove_listener(feature_listener)
-                
-                if feature.get_name() == FeatureAudioADPCM.FEATURE_NAME:
-                    device.disable_notifications(audioSyncFeature)
-                    audioSyncFeature.remove_listener(audioSyncFeature_listener)
-                elif feature.get_name() == FeatureAudioADPCMSync.FEATURE_NAME:
-                    device.disable_notifications(audioFeature)
-                    audioFeature.remove_listener(audioFeature_listener)
+                while True:
+                    device.wait_for_notifications(0.05)
+                    device2.wait_for_notifications(0.05)
+                    device3.wait_for_notifications(0.05)
+                    device4.wait_for_notifications(0.05)
+                    device5.wait_for_notifications(0.05)
+                    device6.wait_for_notifications(0.05)
 
     except BTLEException as e:
         print(e)
